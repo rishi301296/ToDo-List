@@ -1,0 +1,9 @@
+# Packages
+bin
+var
+sdist
+lib
+lib64
+__pycache__
+
+
