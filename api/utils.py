@@ -117,11 +117,11 @@ def remove_task(params, request):
     user, created = User.objects.get_or_create(user_id=user_id, user_name=user_name, team_id=team_id,
                                                team_name=team_name, channel_id=channel_id, channel_name=channel_name)
     try:
-        task, created = Task.objects.get(task_name=task, is_deleted=False)
+        task = Task.objects.get(task_name=task, is_deleted=False)
     except Task.DoesNotExist as e:
-        return "\'%s\' does not present in TODO." % (task, )
+        return response(data="\'%s\' does not present in TODO." % (task, ))
     if task.user.channel_id == user.channel_id:
         task.delete()
-        return "Removed TODO for \'%s\'." % (task, )
+        return response(data="Removed TODO for \'%s\'." % (task, ))
     else:
-        return "\'%s\' does not have permission to delete the TODO" % (user.user_id, )
+        return response("\'%s\' does not have permission to delete the TODO" % (user.user_id, ))
