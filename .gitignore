@@ -11,3 +11,5 @@ __pycache__
 .pydevproject
 .idea
 
+# Logs file
+log.txt

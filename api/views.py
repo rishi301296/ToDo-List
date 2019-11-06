@@ -1,5 +1,3 @@
-from django.views.decorators.csrf import csrf_exempt
-
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -14,7 +12,8 @@ class AddTask(APIView):
         """
         View to add tasks
         """
-        return api_utils.response("Task added successfully", status.HTTP_200_OK)
+        params = request.data
+        return api_utils.add_task(params, request)
 
 
 class ShowTaskList(APIView):
@@ -24,7 +23,8 @@ class ShowTaskList(APIView):
         """
         View to show all tasks
         """
-        return api_utils.response("No tasks to show", status.HTTP_200_OK)
+        params = request.data
+        return api_utils.show_tasks(params, request)
 
 
 class RemoveTask(APIView):
@@ -32,6 +32,7 @@ class RemoveTask(APIView):
 
     def post(self, request):
         """
-        Loads LOVs from a xlsx file (present locally on server)
+        View to remove task
         """
-        return api_utils.response("No tasks to remove", status.HTTP_200_OK)
+        params = request.data
+        return api_utils.remove_task(params, request)
