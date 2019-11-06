@@ -6,4 +6,8 @@ lib
 lib64
 __pycache__
 
+# Mr Developer
+.project
+.pydevproject
+.idea
 
