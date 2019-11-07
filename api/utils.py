@@ -96,7 +96,7 @@ def show_tasks(params, request):
     for i in tasks:
         data += "- " + i + "\n"
     data = data.strip('\n')
-    return response(data)
+    return response(data, to_channel=True)
 
 
 def remove_task(params, request):
