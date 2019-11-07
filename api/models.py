@@ -24,13 +24,23 @@ class User(ModelBase):
     """
     user_id = models.CharField(max_length=100, null=False)
     user_name = models.CharField(max_length=100)
-    channel_id = models.CharField(max_length=100, null=False)
-    channel_name = models.CharField(max_length=100)
     team_id = models.CharField(max_length=100, null=False)
     team_name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.user_id
+        return self.user_name
+
+
+class Channel(ModelBase):
+    """
+        Channel model
+    """
+    channel_id = models.CharField(max_length=100, null=False)
+    channel_name = models.CharField(max_length=100)
+    user = models.ManyToManyField(User, related_name='channel_users')
+
+    def __str__(self):
+        return self.channel_name
 
 
 class Task(ModelBase):
@@ -38,7 +48,8 @@ class Task(ModelBase):
         Model to save tasks
     """
     task_name = models.TextField(null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_users')
+    created_in = models.ForeignKey(Channel, on_delete=models.CASCADE, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.task_name

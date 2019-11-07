@@ -4,7 +4,7 @@ import os
 from rest_framework import status
 from rest_framework.response import Response
 
-from api.models import Task, User
+from api.models import Task, User, Channel
 from TodoList.settings import BASE_DIR
 
 
@@ -57,6 +57,32 @@ def log(level, data):
         pass
 
 
+def create_user_and_channel(params):
+    """
+    To create user and channel before all apis
+    :param params:
+                - user_id
+                - user_name
+                - team_id
+                - team_name
+                - channel_id
+                - channel_name
+    :return: user, channel
+    """
+    log('info', {"params": params, "msg": "In create_user_and_channel utils"})
+    user_id = params.get('user_id', '')
+    user_name = params.get('user_name', '')
+    team_id = params.get('team_id', '')
+    team_name = params.get('team_name', '')
+    channel_id = params.get('channel_id', '')
+    channel_name = params.get('channel_name', '')
+    user, created = User.objects.get_or_create(user_id=user_id, user_name=user_name, team_id=team_id,
+                                               team_name=team_name)
+    channel, created = Channel.objects.get_or_create(channel_id=channel_id, channel_name=channel_name)
+    channel.user.add(user)
+    return user, channel
+
+
 def add_task(params, request):
     """
     Add task in database
@@ -66,19 +92,12 @@ def add_task(params, request):
     """
     log('info', {"params": params, "msg": "In add task utils"})
     task = params.get('text', '')
-    user_id = params.get('user_id', '')
-    user_name = params.get('user_name', '')
-    team_id = params.get('team_id', '')
-    team_name = params.get('team_name', '')
-    channel_id = params.get('channel_id', '')
-    channel_name = params.get('channel_name', '')
-    user, created = User.objects.get_or_create(user_id=user_id, user_name=user_name, team_id=team_id,
-                                               team_name=team_name, channel_id=channel_id, channel_name=channel_name)
-    task, created = Task.objects.get_or_create(user=user, task_name=task)
+    user, channel = create_user_and_channel(params)
+    task, created = Task.objects.get_or_create(created_by=user, task_name=task, created_in=channel)
     if created:
         return response(data='Added TODO for \'%s\'.' % (task, ), to_channel=True)
     if not task.is_deleted:
-        return response(data='Already added TODO for \'%s\'.' % (task, ))
+        return response(data='Already added TODO for \'%s\'.' % (task, ), to_channel=True)
     task.is_deleted = False
     task.save()
     return response(data='Added TODO for \'%s\'.' % (task,), to_channel=True)
@@ -92,10 +111,10 @@ def show_tasks(params, request):
     :return: None
     """
     log('info', {"params": params, "msg": "In show tasks utils"})
-    channel_id = params.get('channel_id', '')
-    tasks = Task.objects.filter(user__channel_id=channel_id, is_deleted=False).values_list('task_name', flat=True)
+    user, channel = create_user_and_channel(params)
+    tasks = Task.objects.filter(created_in=channel, is_deleted=False).values_list('task_name', flat=True)
     if not tasks.count():
-        return response(data="No TODOs")
+        return response(data="No TODOs", to_channel=True)
     data = ""
     for i in tasks:
         data += "- " + i + "\n"
@@ -112,20 +131,13 @@ def remove_task(params, request):
     """
     log('info', {"params": params, "msg": "In remove task utils"})
     task = params.get('text', '')
-    user_id = params.get('user_id', '')
-    user_name = params.get('user_name', '')
-    team_id = params.get('team_id', '')
-    team_name = params.get('team_name', '')
-    channel_id = params.get('channel_id', '')
-    channel_name = params.get('channel_name', '')
-    user, created = User.objects.get_or_create(user_id=user_id, user_name=user_name, team_id=team_id,
-                                               team_name=team_name, channel_id=channel_id, channel_name=channel_name)
+    user, channel = create_user_and_channel(params)
     try:
-        task = Task.objects.get(task_name=task, is_deleted=False)
+        task = Task.objects.get(task_name=task, created_in=channel, is_deleted=False)
     except Task.DoesNotExist as e:
-        return response(data="\'%s\' is not present in TODO." % (task, ))
-    if task.user.channel_id == user.channel_id:
+        return response(data="\'%s\' is not present in TODO." % (task, ), to_channel=True)
+    if task.created_in in user.channel_users.all():
         task.delete()
         return response(data="Removed TODO for \'%s\'." % (task, ), to_channel=True)
     else:
-        return response("\'%s\' does not have permission to delete the TODO" % (user.user_name, ))
+        return response("\'%s\' does not have permission to delete the TODO" % (user.user_name, ), to_channel=True)
