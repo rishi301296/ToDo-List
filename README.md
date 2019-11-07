@@ -21,12 +21,12 @@ To run the project:-
 2. Clone and download it.
 3. Install Python, version=3.5.2
 4. Run the command 
--> pip install virtualenv
--> cd ~/../project-directory
--> virtualenv .
--> source ../bin/activate (for MacOS and Linux)
--> pip install -r requirements.txt
--> python manage.py migrate
--> python manage.py runserver 8000
+- pip install virtualenv
+- cd ~/../project-directory
+- virtualenv .
+- source ../bin/activate (for MacOS and Linux)
+- pip install -r requirements.txt
+- python manage.py migrate
+- python manage.py runserver 8000
 
 Now the following 3 urls can be accessed using localhost:8000 domain
