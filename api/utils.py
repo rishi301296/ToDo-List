@@ -77,7 +77,11 @@ def add_task(params, request):
     task, created = Task.objects.get_or_create(user=user, task_name=task)
     if created:
         return response(data='Added TODO for \'%s\'.' % (task, ), to_channel=True)
-    return response(data='Already added TODO for \'%s\'.' % (task, ))
+    if not task.is_deleted:
+        return response(data='Already added TODO for \'%s\'.' % (task, ))
+    task.is_deleted = False
+    task.save()
+    return response(data='Added TODO for \'%s\'.' % (task,), to_channel=True)
 
 
 def show_tasks(params, request):
@@ -119,7 +123,7 @@ def remove_task(params, request):
     try:
         task = Task.objects.get(task_name=task, is_deleted=False)
     except Task.DoesNotExist as e:
-        return response(data="\'%s\' does not present in TODO." % (task, ))
+        return response(data="\'%s\' is not present in TODO." % (task, ))
     if task.user.channel_id == user.channel_id:
         task.delete()
         return response(data="Removed TODO for \'%s\'." % (task, ), to_channel=True)
