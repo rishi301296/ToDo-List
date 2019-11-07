@@ -76,7 +76,7 @@ def add_task(params, request):
                                                team_name=team_name, channel_id=channel_id, channel_name=channel_name)
     task, created = Task.objects.get_or_create(user=user, task_name=task)
     if created:
-        return response(data='Added TODO for \'%s\'.' % (task, ))
+        return response(data='Added TODO for \'%s\'.' % (task, ), to_channel=True)
     return response(data='Already added TODO for \'%s\'.' % (task, ))
 
 
@@ -89,7 +89,7 @@ def show_tasks(params, request):
     """
     log('info', {"params": params, "msg": "In show tasks utils"})
     channel_id = params.get('channel_id', '')
-    tasks = Task.objects.filter(user__channel_id=channel_id).values_list('task_name', flat=True)
+    tasks = Task.objects.filter(user__channel_id=channel_id, is_deleted=False).values_list('task_name', flat=True)
     if not tasks.count():
         return response(data="No TODOs")
     data = ""
@@ -122,6 +122,6 @@ def remove_task(params, request):
         return response(data="\'%s\' does not present in TODO." % (task, ))
     if task.user.channel_id == user.channel_id:
         task.delete()
-        return response(data="Removed TODO for \'%s\'." % (task, ))
+        return response(data="Removed TODO for \'%s\'." % (task, ), to_channel=True)
     else:
-        return response("\'%s\' does not have permission to delete the TODO" % (user.user_id, ))
+        return response("\'%s\' does not have permission to delete the TODO" % (user.user_name, ))
